@@ -4,14 +4,35 @@ Repository for API Management Service
 
 ## Project Structure
 
+```plaintext
+APICanvas/
 ├── src/
-│ ├── api/ # API Gateway configurations
-│ ├── lambda/ # Lambda function handlers
-│ ├── models/ # Data models and schemas
-│ └── utils/ # Shared utilities
-├── infrastructure/ # IaC configurations
-├── tests/ # Test suites
-└── docs/ # Documentation
+│   ├── lambda/
+│   │   └── api-management/
+│   │       ├── models/
+│   │       │   └── types.ts
+│   │       ├── middleware/
+│   │       │   └── tokenValidator.ts
+│   │       ├── utils/
+│   │       │   └── dynamodb.ts
+│   │       ├── index.ts
+│   │       ├── package.json
+│   │       └── tsconfig.json
+│   └── utils/
+│       └── common.ts
+├── infrastructure/
+│   ├── lib/
+│   │   └── api-canvas-stack.ts
+│   ├── bin/
+│   │   └── api-canvas.ts
+│   └── cdk.json
+├── tests/
+│   └── api-management/
+│       └── api.test.ts
+├── package.json
+└── tsconfig.json
+
+```
 
 ## Setup Instructions
 
