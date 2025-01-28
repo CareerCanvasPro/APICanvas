@@ -3,62 +3,60 @@ name: Deploy API Canvas
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    paths:
+      - 'src/lambda/api-management/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/lambda/api-management
+
     steps:
       - uses: actions/checkout@v3
       
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: './src/lambda/api-management/package-lock.json'
 
       - name: Install dependencies
-        run: |
-          cd src/lambda/api-management
-          npm install
-          cd ../../../infrastructure
-          npm install
+        run: npm ci
 
       - name: Run tests
-        run: |
-          cd src/lambda/api-management
-          npm test
-          cd ../../../infrastructure
-          npm test
+        run: npm test
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    environment: production
     
     steps:
       - uses: actions/checkout@v3
-
+      
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          cd infrastructure
-          npm install
+          cd src/lambda/api-management
+          npm ci
+          npm run build
 
-      - name: Deploy stack
+      - name: Deploy to AWS
         run: |
-          cd infrastructure
-          npm run cdk deploy -- --require-approval never
+          cd src/lambda/api-management
+          npm run deploy

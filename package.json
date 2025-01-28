@@ -6,25 +6,24 @@
     "cdk": "cdk",
     "deploy": "cdk deploy",
     "destroy": "cdk destroy",
-    "synth": "cdk synth"
+    "synth": "cdk synth",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.147",
-    "@types/node": "^20.6.0",
-    "@types/uuid": "^10.0.0",
-    "aws-cdk": "^2.88.0",
-    "aws-cdk-lib": "^2.88.0",
-    "constructs": "^10.2.69",
-    "typescript": "^4.9.5"
+    "@nestjs/testing": "^11.0.6",
+    "@types/jest": "^29.5.14",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.6",
-    "@nestjs/core": "^11.0.6",
-    "@nestjs/platform-express": "^11.0.6",
-    "aws-sdk": "^2.1692.0",
+    "@nestjs/cache-manager": "^3.0.0",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/throttler": "^6.4.0",
+    "@types/jsonwebtoken": "^9.0.8",
+    "cache-manager": "^6.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
-    "reflect-metadata": "^0.2.2",
-    "uuid": "^11.0.5"
+    "jsonwebtoken": "^9.0.2"
   }
 }
