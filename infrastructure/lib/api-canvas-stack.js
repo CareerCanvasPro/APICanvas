@@ -15,23 +15,13 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApiCanvasStack = void 0;
 const cdk = __importStar(require("aws-cdk-lib"));
@@ -45,30 +35,37 @@ class ApiCanvasStack extends cdk.Stack {
         const apisTable = new dynamodb.Table(this, 'ApisTable', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-            removalPolicy: cdk.RemovalPolicy.DESTROY, // For development only
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
         const tokensTable = new dynamodb.Table(this, 'TokensTable', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-            removalPolicy: cdk.RemovalPolicy.DESTROY, // For development only
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+        const rateLimitTable = new dynamodb.Table(this, 'RateLimitTable', {
+            partitionKey: { name: 'token', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'api_id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            timeToLiveAttribute: 'ttl'
         });
         // Lambda Functions
-        // Updated Lambda Function configuration
         const apiManagementFunction = new lambda.Function(this, 'ApiManagementFunction', {
             runtime: lambda.Runtime.NODEJS_18_X,
-            handler: 'index.handler',
+            handler: 'dist/main.handler',
             code: lambda.Code.fromAsset('src/lambda/api-management', {
                 bundling: {
                     image: lambda.Runtime.NODEJS_18_X.bundlingImage,
                     command: [
                         'bash', '-c',
-                        'npm install && npm run build && cp -r node_modules dist/ && cp package.json dist/'
+                        'npm install && npm run build && cp -r dist/* /asset-output/ && cp package.json /asset-output/ && cd /asset-output && npm install --production'
                     ],
                 },
             }),
             environment: {
                 APIS_TABLE: apisTable.tableName,
                 TOKENS_TABLE: tokensTable.tableName,
+                RATE_LIMIT_TABLE: rateLimitTable.tableName,
                 NODE_OPTIONS: '--enable-source-maps',
             },
             timeout: cdk.Duration.seconds(30),
@@ -77,28 +74,37 @@ class ApiCanvasStack extends cdk.Stack {
         // Grant permissions
         apisTable.grantReadWriteData(apiManagementFunction);
         tokensTable.grantReadWriteData(apiManagementFunction);
-        // API Gateway
+        rateLimitTable.grantReadWriteData(apiManagementFunction);
+        // API Gateway with CORS
         const api = new apigateway.RestApi(this, 'ApiCanvasApi', {
             restApiName: 'API Canvas Service',
             description: 'API Management Service',
+            defaultCorsPreflightOptions: {
+                allowOrigins: apigateway.Cors.ALL_ORIGINS,
+                allowMethods: apigateway.Cors.ALL_METHODS,
+                allowHeaders: ['Content-Type', 'Authorization'],
+                maxAge: cdk.Duration.days(1),
+            },
         });
-        // APIs resource
+        // APIs resource and methods
         const apis = api.root.addResource('apis');
-        // Collection endpoints
         apis.addMethod('GET', new apigateway.LambdaIntegration(apiManagementFunction));
         apis.addMethod('POST', new apigateway.LambdaIntegration(apiManagementFunction));
-        // Single API resource
         const singleApi = apis.addResource('{id}');
         singleApi.addMethod('PUT', new apigateway.LambdaIntegration(apiManagementFunction));
         singleApi.addMethod('DELETE', new apigateway.LambdaIntegration(apiManagementFunction));
-        // Add CORS support
-        const corsOptions = {
-            allowOrigins: apigateway.Cors.ALL_ORIGINS,
-            allowMethods: apigateway.Cors.ALL_METHODS,
-            allowHeaders: ['Content-Type', 'Authorization']
-        };
-        apis.addCorsPreflight(corsOptions);
-        singleApi.addCorsPreflight(corsOptions);
+        // Token management endpoints
+        const tokens = singleApi.addResource('tokens');
+        tokens.addMethod('GET', new apigateway.LambdaIntegration(apiManagementFunction));
+        tokens.addMethod('POST', new apigateway.LambdaIntegration(apiManagementFunction));
+        const singleToken = tokens.addResource('{tokenId}');
+        singleToken.addMethod('DELETE', new apigateway.LambdaIntegration(apiManagementFunction));
+        // Output the API URL
+        new cdk.CfnOutput(this, 'ApiUrl', {
+            value: api.url,
+            description: 'API Gateway endpoint URL',
+        });
     }
 }
 exports.ApiCanvasStack = ApiCanvasStack;
+//# sourceMappingURL=api-canvas-stack.js.map

@@ -1,17 +1,55 @@
 {
   "name": "api-management",
   "version": "1.0.0",
+  "description": "API Management Service for CareerCanvas - Handles API registration, token management, and rate limiting",
+  "author": "CareerCanvas Team",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
-    "build": "tsc"
+    "prebuild": "rm -rf dist",
+    "build": "nest build",
+    "postbuild": "cp package*.json dist/ && cd dist && npm install --production",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "deploy": "cd ../../.. && npm run deploy",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "aws-sdk": "^2.1450.0",
+    "@aws-sdk/client-dynamodb": "^3.734.0",
+    "@aws-sdk/lib-dynamodb": "^3.734.0",
+    "@aws-sdk/util-dynamodb": "^3.734.0",
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/swagger": "^6.3.0",
+    "@nestjs/testing": "^9.4.3",
+    "@vendia/serverless-express": "^4.12.6",
+    "aws-lambda": "^1.0.7",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@nestjs/cli": "^9.5.0",
+    "@nestjs/schematics": "^9.0.0",
     "@types/aws-lambda": "^8.10.119",
+    "@types/jest": "^29.5.11",
     "@types/node": "^18.0.0",
+    "@types/supertest": "^2.0.12",
     "@types/uuid": "^9.0.2",
-    "typescript": "^5.1.6"
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "^4.9.5"
   }
 }

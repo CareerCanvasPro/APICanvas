@@ -15,10 +15,16 @@
     "aws-cdk": "^2.88.0",
     "aws-cdk-lib": "^2.88.0",
     "constructs": "^10.2.69",
-    "typescript": "^5.2.2"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
+    "@nestjs/common": "^11.0.6",
+    "@nestjs/core": "^11.0.6",
+    "@nestjs/platform-express": "^11.0.6",
     "aws-sdk": "^2.1692.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
     "uuid": "^11.0.5"
   }
 }

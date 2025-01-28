@@ -21,22 +21,48 @@ export class ApiCanvasStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    const rateLimitTable = new dynamodb.Table(this, 'RateLimitTable', {
+      partitionKey: { name: 'token', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'api_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'ttl'
+    });
+
     // Lambda Functions
     const apiManagementFunction = new lambda.Function(this, 'ApiManagementFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('src/lambda/api-management', {
+      handler: 'dist/main.handler',
+      code: lambda.Code.fromAsset('../src/lambda/api-management', {
         bundling: {
           image: lambda.Runtime.NODEJS_18_X.bundlingImage,
           command: [
             'bash', '-c',
-            'npm install && npm run build && cp package.json dist/ && cd dist && npm install --production'
+            'npm install -g @nestjs/cli@9.5.0 && ' +  // Specify older version of CLI
+            'npm install --legacy-peer-deps && ' +
+            'npm run build && ' +
+            'cp -r dist/* /asset-output/ && ' +
+            'cp package*.json /asset-output/ && ' +
+            'cd /asset-output && ' +
+            'npm install --production --legacy-peer-deps --no-package-lock'
           ],
+          environment: {
+            NODE_ENV: 'production',
+            HOME: '/tmp/home',
+            npm_config_cache: '/tmp/npm-cache',
+            NODE_OPTIONS: '--max_old_space_size=4096'  // Increase memory limit
+          },
+          user: 'root',
+          volumes: [{
+            hostPath: '/tmp',
+            containerPath: '/tmp'
+          }]
         },
       }),
       environment: {
         APIS_TABLE: apisTable.tableName,
         TOKENS_TABLE: tokensTable.tableName,
+        RATE_LIMIT_TABLE: rateLimitTable.tableName,
         NODE_OPTIONS: '--enable-source-maps',
       },
       timeout: cdk.Duration.seconds(30),
@@ -46,6 +72,7 @@ export class ApiCanvasStack extends cdk.Stack {
     // Grant permissions
     apisTable.grantReadWriteData(apiManagementFunction);
     tokensTable.grantReadWriteData(apiManagementFunction);
+    rateLimitTable.grantReadWriteData(apiManagementFunction);
 
     // API Gateway with CORS
     const api = new apigateway.RestApi(this, 'ApiCanvasApi', {
@@ -75,6 +102,16 @@ export class ApiCanvasStack extends cdk.Stack {
 
     const singleToken = tokens.addResource('{tokenId}');
     singleToken.addMethod('DELETE', new apigateway.LambdaIntegration(apiManagementFunction));
+
+    // Metrics endpoints
+    const metrics = singleApi.addResource('metrics');
+    metrics.addMethod('GET', new apigateway.LambdaIntegration(apiManagementFunction));
+    
+    const dailyMetrics = metrics.addResource('daily');
+    dailyMetrics.addMethod('GET', new apigateway.LambdaIntegration(apiManagementFunction));
+    
+    const monthlyMetrics = metrics.addResource('monthly');
+    monthlyMetrics.addMethod('GET', new apigateway.LambdaIntegration(apiManagementFunction));
 
     // Output the API URL
     new cdk.CfnOutput(this, 'ApiUrl', {
