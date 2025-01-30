@@ -4,9 +4,13 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Duration } from 'aws-cdk-lib';
+import * as semver from 'semver';
 
-// Add version constraint for Lambda runtime
-const RUNTIME_VERSION = '18.x';
+// Validate Node.js version
+const REQUIRED_NODE_VERSION = '>=7.5.2';
+if (!semver.satisfies(process.version, REQUIRED_NODE_VERSION)) {
+  throw new Error(`Required node version ${REQUIRED_NODE_VERSION}`);
+}
 
 export class ApiStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
