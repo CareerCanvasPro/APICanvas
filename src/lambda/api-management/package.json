@@ -21,5 +21,15 @@
     "test:cov": "jest --coverage --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.config.ts --detectOpenHandles"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.177.0",
+    "body-parser": "^1.20.3",
+    "cookie": "^1.0.2",
+    "express": "^4.21.2",
+    "path-to-regexp": "^8.2.0",
+    "send": "^1.1.0",
+    "serve-static": "^1.16.2",
+    "webpack": "^5.97.1"
   }
 }
