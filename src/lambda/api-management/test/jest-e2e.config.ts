@@ -6,10 +6,10 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   testRegex: '.e2e-spec.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': 'ts-jest'
   },
   moduleNameMapper: {
-    '^src/(.*)$': '<rootDir>/../src/$1',
+    '^src/(.*)$': '<rootDir>/../src/$1'
   }
 };
 

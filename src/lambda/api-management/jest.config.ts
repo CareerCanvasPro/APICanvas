@@ -2,17 +2,21 @@ import type { Config } from '@jest/types';
 
 const config: Config.InitialOptions = {
   moduleFileExtensions: ['js', 'json', 'ts'],
-  rootDir: '.',
+  rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest'
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
-  coverageDirectory: './coverage',
+  coverageDirectory: '../coverage',
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['./test/jest-setup.ts'],
   moduleNameMapper: {
-    '^src/(.*)$': '<rootDir>/src/$1'
+    '^src/(.*)$': '<rootDir>/$1'
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json'
+    }
   }
 };
 

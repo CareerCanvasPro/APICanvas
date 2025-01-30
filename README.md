@@ -6,8 +6,15 @@ API Management Service for CareerCanvas - Handles API registration, token manage
 
 - API Registration and Management
 - Token Generation and Validation
-- Rate Limiting
+- Rate Limiting and Throttling
 - Usage Metrics and Analytics
+- Admin Dashboard and Authentication
+- Real-time Performance Monitoring
+- Incident Management System
+- Cache Management and Analysis
+- Root Cause Analysis
+- Automated Actions and Scaling
+- JWT-based Authentication
 - Swagger Documentation
 
 ## Getting Started
@@ -15,7 +22,7 @@ API Management Service for CareerCanvas - Handles API registration, token manage
 ### Prerequisites
 
 - Node.js 18.x
-- AWS Account
+- AWS Account and CLI configured
 - DynamoDB Local (for development)
 
 ### Installation
@@ -23,6 +30,7 @@ API Management Service for CareerCanvas - Handles API registration, token manage
 ```bash
 cd src/lambda/api-management
 npm install
+cp .env.example .env
 ```
 
 ### Development
