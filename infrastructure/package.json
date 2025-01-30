@@ -28,6 +28,7 @@
     "@nestjs/testing": "^11.0.6",
     "aws-cdk-lib": "^2.177.0",
     "constructs": "^10.3.0",
+    "semver": "^7.7.0",
     "source-map-support": "^0.5.21"
   }
 }
