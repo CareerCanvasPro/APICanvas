@@ -1,62 +1,31 @@
-name: Deploy API Canvas
+name: Deploy CareerCanvas
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'src/lambda/api-management/**'
-      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src/lambda/api-management
-
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './src/lambda/api-management/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
   deploy:
-    needs: test
     runs-on: ubuntu-latest
-    environment: production
-    
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
+      - name: Build and Test API
         run: |
-          cd src/lambda/api-management
-          npm ci
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet test
+      
+      - name: Build Admin Dashboard
+        run: |
+          cd admin
+          npm install
           npm run build
-
-      - name: Deploy to AWS
+      
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
         run: |
-          cd src/lambda/api-management
-          npm run deploy
+          docker-compose -f deploy/docker-compose.yml build
+          docker-compose -f deploy/docker-compose.yml push
